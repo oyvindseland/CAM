@@ -628,7 +628,19 @@ subroutine dropmixnuc( &
    character(len=2)                 :: modeString
    character(len=20)                :: varname
 #endif
-   integer                              :: numberOfModes
+   integer                          :: numberOfModes
+   integer                          :: modtype(nmodes) 
+   real(r8)                         :: sigi(nmodes)
+   real(r8)                         :: A,B,ACCOM
+   real(r8)                         :: SG(nmodes)
+   real(r8)                         :: press
+   real(r8)                         :: DPGI(nmodes)
+   real(r8)                         :: NDACT 
+   real(r8)                         :: SMAX
+   real(r8)                         :: suma
+   integer                          :: mk
+   real(r8)                         :: actfrac(nmodes)
+   real(r8)                         :: mactfrac(nmodes)
 !-------------------------------------------------------------------------------
 #undef EXTRATESTS
 #undef MASS_BALANCE_CHECK
@@ -808,7 +820,12 @@ subroutine dropmixnuc( &
          !end do
          !stop
       endif
-
+!      fn(:) = 0.0_r8
+!      fm(:) = 0.0_r8
+!      fluxn(:)=0.0_r8
+!      fluxm(:)= 0.0_r8
+!      fn_in(:,:,:)=0.0_r8
+!      flux_fullact(:)=0.0_r8 ! Need to be set if using alternative activation formulation.
 #endif
 
    ! overall_main_i_loop
@@ -1132,10 +1149,13 @@ subroutine dropmixnuc( &
             ! load aerosol properties, assuming external mixtures
 
 #ifdef OSLO_AERO
+
    naermod(:) = 0.0_r8
    vaerosol(:) = 0.0_r8
    hygro(:) = 0.0_r8
    lnsigman(:) = log(2.0_r8)
+   actfrac(:) = 0.0_r8
+   mactfrac(:) = 0.0_r8
 
    m=0
    do kcomp = 1,nmodes
@@ -1144,11 +1164,75 @@ subroutine dropmixnuc( &
          naermod(m) = numberConcentration(i,k,kcomp)
          vaerosol(m) = volumeConcentration(i,k,kcomp)
          hygro(m) =    hygroscopicity(i,k,kcomp)
+         hygro(m) = max(hygro(m),0.01_r8)
          lnsigman(m) = lnsigma(i,k,kcomp)
          speciesMap(m) = kcomp
+                  modtype(m)=1
+                  sigi(m)=exp(lnsigman(m))
+!                  write(6,*) 'ndrop ',m,lnsigman(m),sigi(m)
+                  SG(m)=0.0_r8
+!            exp45logsig_var(m) = exp(4.5_r8*lnsigman(m)*lnsigman(m))
+!            amcube(m)=(3._r8*volume(m)/(4._r8*pi*exp45logsig_var(m)*na(m)))  ! only if variable size dist
+!                  radius(m)=amcube(m)**(1._r8/3._r8)
+                  DPGI(m)=2._r8*numberMedianRadius(i,k,kcomp)
       end if
    end do
    numberOfModes = m
+                  A=2.25_r8
+                  B=1.2_r8
+                  ACCOM=1.0_r8  ! Can be reduced to 0.1, 0.042 (Prup
+ 
+                 press=287._r8*cs(i,k)*temp(i,k)
+
+!      open(unit=667, file='stuffxxx', access='append', status='unknown')
+!      write(667,*) 'before access1'
+!      close(667)
+                CALL CCNSPEC (naermod,DPGI,sigi,modtype,temp(i,k),press,numberOfModes,hygro,A,B,SG) 
+
+!                   WPARC = wbar ! Vertical velocity (m/s)
+!                   SIGW = wmix
+! fn                   
+                   CALL PDFACTIV (wbar,naermod,hygro,A,B,ACCOM,SG,wmix,temp(i,k),press,NDACT,actfrac,mactfrac,numberOfModes,SMAX)                                           
+!            suma=0._r8
+!            do mk=1,numberOfModes
+!               suma=suma+naermod(mk)*actfrac(mk)                          
+!            end do
+!           WRITE(97,*) NDACT*1.d-6, suma*1.d-6,SMAX*100.d0, wbar,wmix       
+!            write(99,*)  
+!          WRITE (99,*) '    ',naermod, DPGI, SIGI, hygro, temp(i,k), press, numberofmodes, wbar,ndact, smax
+!          do m=1,numberOfModes
+!           write(6,*) 'loop1 ',i,k,m,actfrac(m),mactfrac(m)
+!          actfrac(m)=0.90_r8
+!          mactfrac(m)=0.90_r8
+!          end do
+          if (use_hetfrz_classnuc) then
+            fn_in(i,k,1:nmodes)=0.0_r8
+          else
+            fn(m)=0.0_r8
+          end if
+!          fn_in(i,k,1:nmodes)=0._r8
+          fm(:)=0._r8
+          fluxn(:)=0._r8
+          fluxm(:)=0._r8
+          flux_fullact(k)=0._r8          
+          do m=1,numberOfModes  
+            if (use_hetfrz_classnuc) then
+              fn_in(i,k,m)=actfrac(m)
+            else
+              fn(m)=actfrac(m)
+            end if
+            fm(m)=mactfrac(m)
+           if(wbar.gt.0._r8)then
+             fluxn(m)=actfrac(m)*wbar
+             fluxm(m)=mactfrac(m)*wbar
+
+           else
+             fluxn(m)=0._r8
+             fluxm(m)=0._r8 
+           endif
+         end do
+             if (wbar.gt.0.0_r8) &
+             flux_fullact(k)=wbar             
 #else
          numberOfModes = ntot_amode
             phase = 1 ! interstitial
@@ -1164,35 +1248,35 @@ subroutine dropmixnuc( &
 #endif
          !++ MH_2015/04/10
          !Call the activation procedure
-         if(numberOfModes .gt. 0)then
-		    if (use_hetfrz_classnuc) then
-               call activate_modal( &
-               wbar, wmix, wdiab, wmin, wmax,                       &
-               temp(i,k), cs(i,k), naermod, numberOfModes,          &
-               vaerosol, hygro, fn_in(i,k,1:nmodes), fm, fluxn,            &
-               fluxm,flux_fullact(k)                                &
-#ifdef OSLO_AERO
-               ,lnsigman                                            &
-#endif
-               )
-            else
-               call activate_modal( &
-               wbar, wmix, wdiab, wmin, wmax,                       &
-               temp(i,k), cs(i,k), naermod, numberOfModes,          &
-               vaerosol, hygro, fn, fm, fluxn,                      &
-               fluxm,flux_fullact(k)                                &
-#ifdef OSLO_AERO
-               ,lnsigman                                            &
-#endif
-               )
-            end if
+!         if(numberOfModes .gt. 0)then
+!		    if (use_hetfrz_classnuc) then
+!               call activate_modal( &nc
+!               wbar, wmix, wdiab, wmin, wmax,                       &
+!               temp(i,k), cs(i,k), naermod, numberOfModes,          &
+!               vaerosol, hygro, fn_in(i,k,1:nmodes), fm, fluxn,            &
+!               fluxm,flux_fullact(k)                                &
+!#ifdef OSLO_AERO
+!               ,lnsigman                                            &
+!#endif
+!               )
+!            else
+!               call activate_modal( &
+!               wbar, wmix, wdiab, wmin, wmax,                       &
+!               temp(i,k), cs(i,k), naermod, numberOfModes,          &
+!               vaerosol, hygro, fn, fm, fluxn,                      &
+!               fluxm,flux_fullact(k)                                &
+!#ifdef OSLO_AERO
+!               ,lnsigman                                            &
+!#endif
+!               )
+!            end if
 	     !-- MH_2015/04/10
-         endif
+!         endif
 
             dumc = (cldn_tmp - cldo_tmp)
 #ifdef OSLO_AERO
       if (use_hetfrz_classnuc) then
-	     fn_tmp(:) = fn_in(i,k,1:nmodes)
+	 fn_tmp(:) = fn_in(i,k,1:nmodes)
       else
          fn_tmp(:) = fn(:)
       end if
@@ -1200,7 +1284,7 @@ subroutine dropmixnuc( &
       fluxn_tmp(:) = fluxn(:)
       fluxm_tmp(:) = fluxm(:)
       fn(:) = 0.0_r8
-	  fn_in(i,k,:) = 0.0_r8
+      fn_in(i,k,:) = 0.0_r8
       fm(:) = 0.0_r8
       fluxn(:)=0.0_r8
       fluxm(:)= 0.0_r8
@@ -1214,7 +1298,11 @@ subroutine dropmixnuc( &
          fm(kcomp) = fm_tmp(m)
          fluxn(kcomp) = fluxn_tmp(m)
          fluxm(kcomp) = fluxm_tmp(m)
+!         if (use_hetfrz_classnuc) then
+!           write(6,*) 'loop1 ',m,kcomp,wbar,fm(kcomp),fn_in(i,k,kcomp),fluxm(kcomp)
+!         end if
       enddo
+
 #endif
             do m = 1, ntot_amode
                mm = mam_idx(m,0)
@@ -1313,7 +1401,8 @@ subroutine dropmixnuc( &
             vaerosol(:) = 0.0_r8
             hygro(:) = 0.0_r8
             lnsigman(:) = log(2.0_r8)
-
+            actfrac(:) = 0.0_r8
+            mactfrac(:) = 0.0_r8
             m=0
             do kcomp = 1,nmodes
                if(hasAerosol(i,kp1,kcomp) .eqv. .TRUE.)then
@@ -1321,11 +1410,76 @@ subroutine dropmixnuc( &
                   naermod(m) = numberConcentration(i,kp1,kcomp)
                   vaerosol(m) = volumeConcentration(i,kp1,kcomp)
                   hygro(m) =    hygroscopicity(i,kp1,kcomp)
+                  hygro(m) = max(hygro(m),0.01_r8)
                   lnsigman(m) = lnsigma(i,kp1,kcomp)
                   speciesMap(m) = kcomp
+                  modtype(m)=1
+                  sigi(m)=exp(lnsigman(m))
+!                  write(6,*) 'ndrop ',m,lnsigman(m),sigi(m)
+                  SG(m)=0.0_r8
+!            exp45logsig_var(m) = exp(4.5_r8*lnsigman(m)*lnsigman(m))
+!            amcube(m)=(3._r8*volume(m)/(4._r8*pi*exp45logsig_var(m)*na(m)))  ! only if variable size dist
+!                  radius(m)=amcube(m)**(1._r8/3._r8)
+                  DPGI(m)=2._r8*numberMedianRadius(i,k,kcomp)
                end if
             end do
             numberOfModes = m
+
+                  A=2.25_r8
+                  B=1.2_r8
+                  ACCOM=1.0_r8
+ 
+                 press=287._r8*cs(i,k)*temp(i,k)
+!      open(unit=667, file='stuffxxx', access='append', status='unknown')
+!      write(667,*) 'before access2'
+!      close(667)
+                CALL CCNSPEC (naermod,DPGI,sigi,modtype,temp(i,k),press,numberOfModes,hygro,A,B,SG) 
+
+!                   WPARC = wbar ! Vertical velocity (m/s)
+!                   SIGW = wmix
+! fn                   
+                   CALL PDFACTIV (wbar,naermod,hygro,A,B,ACCOM,SG,wmix,temp(i,k),press,NDACT,actfrac,mactfrac,numberOfModes,SMAX)                                           
+!            suma=0._r8
+!            do mk=1,numberOfModes
+!               suma=suma+naermod(mk)*fn_in(i,k,mk)                          
+!            end do
+!           WRITE(97,*) NDACT*1.d-6, suma*1.d-6,SMAX*100.d0, wbar,wmix       
+!            write(99,*)  
+!          WRITE (99,*) '    ',naermod, DPGI, SIGI, hygro, temp(i,k), press, numberofmodes, wbar,ndact, smax
+ 
+!do m=1,numberofModes
+!          write(6,*) 'loop2 ',i,k,m,actfrac(m),mactfrac(m)
+!          actfrac(m)=0.90_r8
+!          mactfrac(m)=0.90_r8
+
+!          end do
+          if (use_hetfrz_classnuc) then
+            fn_in(i,k,1:nmodes)=0.0_r8
+          else
+            fn(m)=0.0_r8
+          end if
+!          fn_in(i,k,1:nmodes)=0._r8
+          fm(:)=0._r8
+          fluxn(:)=0._r8
+          fluxm(:)=0._r8
+          flux_fullact(k)=0._r8          
+          do m=1,numberOfModes  
+            if (use_hetfrz_classnuc) then
+              fn_in(i,k,m)=actfrac(m)
+            else
+              fn(m)=actfrac(m)
+            end if
+            fm(m)=mactfrac(m)
+           if(wbar.gt.0._r8)then
+             fluxn(m)=actfrac(m)*wbar
+             fluxm(m)=mactfrac(m)*wbar
+           else
+             fluxn(m)=0._r8
+             fluxm(m)=0._r8 
+           endif
+         end do
+             if (wbar.gt.0.0_r8) &
+             flux_fullact(k)=wbar
 #else
             numberOfModes = ntot_amode
 
@@ -1339,33 +1493,33 @@ subroutine dropmixnuc( &
                   naermod(m)  = na(i)
                   vaerosol(m) = va(i)
                   hygro(m)    = hy(i)
-               end do
+                end do
 #endif
          !++ MH_2015/04/10
-         if(numberOfModes .gt. 0)then
-		    if (use_hetfrz_classnuc) then
-               call activate_modal( &
-                  wbar, wmix, wdiab, wmin, wmax,                       &
-                  temp(i,k), cs(i,k), naermod, numberOfModes , &
-                  vaerosol, hygro, fn_in(i,k,:), fm, fluxn,                      &
-                  fluxm, flux_fullact(k)                       &
-#ifdef OSLO_AERO
-                  ,lnsigman                                    &
-#endif
-                   )
-            else
-               call activate_modal( &
-                  wbar, wmix, wdiab, wmin, wmax,                       &
-                  temp(i,k), cs(i,k), naermod, numberOfModes , &
-                  vaerosol, hygro, fn, fm, fluxn,                      &
-                  fluxm, flux_fullact(k)                       &
-#ifdef OSLO_AERO
-                  ,lnsigman                                    &
-#endif
-                   )
-            end if
+!         if(numberOfModes .gt. 0)then
+!		    if (use_hetfrz_classnuc) then
+!               call activate_modal( &
+!                  wbar, wmix, wdiab, wmin, wmax,                       &
+!                  temp(i,k), cs(i,k), naermod, numberOfModes , &
+!                  vaerosol, hygro, fn_in(i,k,1:nmodes), fm, fluxn,            &
+!                  fluxm, flux_fullact(k)                       &
+!#ifdef OSLO_AERO
+!                  ,lnsigman                                    &
+!#endif
+!                   )
+!            else
+!               call activate_modal( &
+!                  wbar, wmix, wdiab, wmin, wmax,                       &
+!                  temp(i,k), cs(i,k), naermod, numberOfModes , &
+!                  vaerosol, hygro, fn, fm, fluxn,                      &
+!                  fluxm, flux_fullact(k)                       &
+!#ifdef OSLO_AERO
+!                  ,lnsigman                                    &
+!#endif
+!                   )
+!            end if
 		 !-- MH_2015/04/10
-         endif
+!         endif
 
             !Difference in cloud fraction this layer and above!
             !we are here because there are more clouds above, and some
@@ -1377,32 +1531,33 @@ subroutine dropmixnuc( &
                endif
 
 #ifdef OSLO_AERO
-            if (use_hetfrz_classnuc) then
-               fn_tmp(:) = fn_in(i,k,1:nmodes)
-            else
-               fn_tmp(:) = fn(:)
-            end if
-            fm_tmp(:) = fm(:)
-            fluxn_tmp(:) = fluxn(:)
-            fluxm_tmp(:) = fluxm(:)
-            fn(:) = 0.0_r8
-			fn_in(i,k,:) = 0.0_r8
-            fm(:) = 0.0_r8
-            fluxn(:)=0.0_r8
-            fluxm(:)= 0.0_r8
-            do m = 1, numberOfModes   !Number of coexisting modes to be used for activation
-               kcomp = speciesMap(m)       !This is the CAM-oslo mode (modes 1-14 may be activated, mode 0 not)
-               if (use_hetfrz_classnuc) then
-                  fn_in(i,k,kcomp) = fn_tmp(m)
-               else
-                  fn(kcomp) = fn_tmp(m)
-               end if
-               fm(kcomp) = fm_tmp(m)
-               fluxn(kcomp) = fluxn_tmp(m)
-               fluxm(kcomp) = fluxm_tmp(m)
-            enddo
-#endif
+      if (use_hetfrz_classnuc) then
+	 fn_tmp(:) = fn_in(i,k,1:nmodes)
+      else
+         fn_tmp(:) = fn(:)
+      end if
+      fm_tmp(:) = fm(:)
+      fluxn_tmp(:) = fluxn(:)
+      fluxm_tmp(:) = fluxm(:)
+      fn(:) = 0.0_r8
+      fn_in(i,k,:) = 0.0_r8
+      fm(:) = 0.0_r8
+      fluxn(:)=0.0_r8
+      fluxm(:)= 0.0_r8
+      do m = 1, numberOfModes   !Number of coexisting modes to be used for activation
+         kcomp = speciesMap(m)       !This is the CAM-oslo mode (modes 1-14 may be activated, mode 0 not)
+         if (use_hetfrz_classnuc) then
+		    fn_in(i,k,kcomp) = fn_tmp(m)
+         else
+            fn(kcomp) = fn_tmp(m)
+         end if
+         fm(kcomp) = fm_tmp(m)
+         fluxn(kcomp) = fluxn_tmp(m)
+         fluxm(kcomp) = fluxm_tmp(m)
+!           write(6,*) 'loop2 ',m,kcomp,wbar,fm(kcomp),fn_in(i,k,kcomp),fluxm(kcomp)
+      enddo
 
+#endif
                fluxntot = 0.0_r8
 
                ! rce-comment 1

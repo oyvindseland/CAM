@@ -788,10 +788,16 @@ contains
 
            
             mm = getTracerIndex(m,lspec,.false.)
+
             if(is_done(mm,lphase) .eqv. .true. )then
                cycle
             endif
             is_done(mm,lphase)=.true.
+
+               if (lphase==1.and.mm.eq.l_ss_a2.or.mm.eq.l_ss_a3.or.mm.eq.l_so4_a2) then
+                  sol_factic=1.0_r8 
+                  f_act_conv=1.0_r8 
+               end if     
 
             if (lphase == 1) then
                jnv = 2

@@ -174,24 +174,24 @@
       <value compset="%PORT">-offline_drv rad</value>
 
       <value compset="_CAM5%PTAERO"               >-phys cam5 -chem trop_mam_oslo</value>
-      <value compset="_CAM60%PTAERO"              >-chem trop_mam_oslo</value>
+      <value compset="_CAM60%PTAERO"              >-chem trop_mam_oslo_sec</value>
       <value compset="_CAM60%PTAEROSEC"           >-chem trop_mam_oslo_sec</value>
-      <value compset="_CAM60%NORESM"              >-chem trop_mam_oslo</value>
+      <value compset="_CAM60%NORESM"              >-chem trop_mam_oslo_sec</value>
       <value compset="_CAM60%NORESM%SEC"          >-chem trop_mam_oslo_sec</value>
-      <value compset="_CAM60%NORESM%NORBC"        >-chem trop_mam_oslo -cosp</value>
+      <value compset="_CAM60%NORESM%NORBC"        >-chem trop_mam_oslo_sec -cosp</value>
       <value compset="_CAM60%NORESM%NORBC%SEC"     >-chem trop_mam_oslo_sec -cosp</value>
       <value compset="_CAM60%%NORBC"     >-chem trop_mam_oslo_sec -cosp</value>
-      <value compset="_CAM60%NORESM%FSST"         >-chem trop_mam_oslo -cosp</value>
+      <value compset="_CAM60%NORESM%FSST"         >-chem trop_mam_oslo_sec -cosp</value>
       <value compset="_CAM60%NORESM%SEC%FSST"      >-chem trop_mam_oslo_sec -cosp</value>
-      <value compset="_CAM60%NORESM%NORPDDMSBC"   >-chem trop_mam_oslo -cosp</value>
+      <value compset="_CAM60%NORESM%NORPDDMSBC"   >-chem trop_mam_oslo_sec -cosp</value>
       <value compset="_CAM60%NORESM%SEC%NORPDDMSBC">-chem trop_mam_oslo_sec -cosp</value>
-      <value compset="_CAM60%NORESM%NORPIBC"      >-chem trop_mam_oslo -cosp</value>
+      <value compset="_CAM60%NORESM%NORPIBC"      >-chem trop_mam_oslo_sec -cosp</value>
       <value compset="_CAM60%NORESM%SEC%NORPIBC"   >-chem trop_mam_oslo_sec -cosp</value>
       <value compset="_CAM54%PTAERO"               >-chem trop_mam_oslo</value>
   
       <value compset="_CAM50%NUDGEPTAERO"   >-phys cam5 -chem trop_mam_oslo -offline_dyn</value>
       <value compset="_CAM54%NUDGEPTAERO"   >-chem trop_mam_oslo -offline_dyn</value>
-      <value compset="_CAM60%NUDGEPTAERO"   >-chem trop_mam_oslo -offline_dyn</value>
+      <value compset="_CAM60%NUDGEPTAERO"   >-chem trop_mam_oslo_sec -offline_dyn</value>
     </values>
     <group>build_component_cam</group>
     <file>env_build.xml</file>
@@ -373,6 +373,7 @@
       <value compset="SSP126_CAM60%NORESM%FRC2"  >ssp126_cam6_noresm_frc2</value>
       <value compset="SSP126_CAM60%NORESM%FRC2EXT"  >ssp126_cam6_noresm_frc2ext</value>
       <value compset="SSP245_CAM60%NORESM%FRC2"  >ssp245_cam6_noresm_frc2</value>
+      <value compset="SSP245_CAM60%NORESM%NORPDDMSBC"> ssp245_cam6_noresm </value>
       <value compset="SSP370_CAM60%NORESM%FRC2"  >ssp370_cam6_noresm_frc2</value>
       <value compset="SSP370LOWNTCF_CAM60%NORESM%FRC2"  >ssp370lowntcf_cam6_noresm_frc2</value>
       <value compset="SSP370REFGHGLOWNTCF_CAM60%NORESM%FRC2"  >ssp370refghglowntcf_cam6_noresm_frc2</value>
@@ -389,6 +390,7 @@
       <value compset="SSP245_CAM60%NORESM%COVTWOBLI%FRC2"  >ssp245_cam6_noresm_covtwobli_frc2</value>
 
       <value compset="SSP245_CAM60%NORESM%NORPIBC%FRC2"  >ssp245_cam6_noresm_frc2</value>
+
       <value compset="SSP245_CAM60%NORESM%NORPIBC%GHGONLY%FRC2"  >ssp245_cam6_noresm_ghgonly_frc2</value>
       <value compset="SSP245_CAM60%NORESM%NORPIBC%NATONLY%FRC2"  >ssp245_cam6_noresm_natonly_frc2</value>
       <value compset="SSP245_CAM60%NORESM%NORPIBC%AERONLY%FRC2"  >ssp245_cam6_noresm_aeronly_frc2</value>
@@ -450,26 +452,26 @@
       <value compset="_CAM60%NORESM%FRC2%1PCT"> flbc_list='CO2','CH4','N2O','CFC11eq','CFC12' </value>
       <!-- fSST NorESM-derived pre-industrial -->
       <value compset="1850_CAM60%NORESM%NORBC" grid="a%0.9x1.25"> ocean_filename='dms-hamocc-dow-taylor_chlor_a-lanaclim_N1850frc2_f09_tn14_20191012_1351-1380_cycle_version20200106.nc' </value>
-      <value compset="1850_CAM60%NORESM%NORBC" grid="a%1.9x2.5" > ocean_filename='dms-hamocc-dow-taylor_chlor_a-lanaclim_N1850_f19_tn14_20190621_1751-1780_cycle_version20190726.nc' </value>
+      <value compset="1850_CAM60%NORESM%NORBC" grid="a%1.9x2.5" > ocean_filename='dms-hamocc-dow-taylor_chlor_a-lanaclim_N1850_f19_tn14_Forces_230512_1751-1780_cycle_version20230512.nc' </value>
       <value compset="1850_CAM60%NORESM%NORBC"> dms_cycle_year=1850 </value>
       <value compset="1850_CAM60%NORESM%NORBC"> opom_cycle_year=1850 </value>
       <value compset="1850_CAM60%NORESM%NORBC"> dms_source_type='CYCLICAL' </value>
       <value compset="1850_CAM60%NORESM%NORBC"> opom_source_type='CYCLICAL' </value>
       <!-- NorESM derived preindustrial -->
       <value compset="CAM60%NORESM%NORPIBC" grid="a%0.9x1.25"> ocean_filename='dms-hamocc-dow-taylor_chlor_a-lanaclim_N1850frc2_f09_tn14_20191012_1351-1380_cycle_version20200106.nc' </value>
-      <value compset="CAM60%NORESM%NORPIBC" grid="a%1.9x2.5" > ocean_filename='dms-hamocc-dow-taylor_chlor_a-lanaclim_N1850_f19_tn14_20190621_1751-1780_cycle_version20190726.nc' </value>
+      <value compset="CAM60%NORESM%NORPIBC" grid="a%1.9x2.5" > ocean_filename='dms-hamocc-dow-taylor_chlor_a-lanaclim_N1850_f19_tn14_Forces_230512_1751-1780_cycle_version20230512.nc' </value>
       <value compset="CAM60%NORESM%NORPIBC"> dms_cycle_year=1850 </value>
       <value compset="CAM60%NORESM%NORPIBC"> opom_cycle_year=1850 </value>
       <value compset="CAM60%NORESM%NORPIBC"> dms_source_type='CYCLICAL' </value>
       <value compset="CAM60%NORESM%NORPIBC"> opom_source_type='CYCLICAL' </value>
 
       <!-- NorESM derived evolving -->
-      <value compset="HIST_CAM60%NORESM%NORBC"> ocean_filename='dms-hamocc-dow-taylor_chlor_a-lanaclim_NHIST_f19_tn14_20190625_1849-2015_series_version20190726.nc' </value>
+      <value compset="HIST_CAM60%NORESM%NORBC"> ocean_filename='dms-hamocc-dow-taylor_chlor_a-lanaclim_NHIST_f19_tn14_Forces_230515_1849-2015_series_version20230515.nc' </value>
       <value compset="HIST_CAM60%NORESM%NORBC"> dms_source_type='INTERP_MISSING_MONTHS' </value>
       <value compset="HIST_CAM60%NORESM%NORBC"> opom_source_type='INTERP_MISSING_MONTHS' </value>
 
       <!-- NorESM derived evolving -->
-      <value compset="SSP370_CAM60%NORESM%NORBC"> ocean_filename='dms-hamocc-dow-taylor_chlor_a-lanaclim_NSSP370frc2_f19_tn14_20191014_2014-2101_series_version20200109.nc' </value>
+      <value compset="SSP370_CAM60%NORESM%NORBC"> ocean_filename='dms-hamocc-dow-taylor_chlor_a-lanaclim_NHIST_f19_tn14_Forces_230515_1849-2015_series_version20230515.nc' </value>
       <value compset="SSP370_CAM60%NORESM%NORBC"> dms_source_type='INTERP_MISSING_MONTHS' </value>
       <value compset="SSP370_CAM60%NORESM%NORBC"> opom_source_type='INTERP_MISSING_MONTHS' </value>
 
@@ -486,6 +488,15 @@
       <value compset="HIST_CAM60%NORESM%SEC%NORPDDMSBC"> dms_source_type='CYCLICAL' </value>
       <value compset="HIST_CAM60%NORESM%SEC%NORPDDMSBC"> opom_source_type='CYCLICAL' </value>
       <!-- fSST AMIP type 1979-2014, smb++-->
+
+      <!-- fSST AMIP type 2015-2019 SSP245-->
+      <value compset="SSP245_CAM60%NORESM%NORPDDMSBC"> ocean_filename='dms-hamocc-dow-taylor_chlor_a-lanaclim_NHIST_f19_tn14_20190625_1985-2014_cycle_version20190726.nc' </value>
+      <value compset="SSP245_CAM60%NORESM%NORPDDMSBC"> dms_cycle_year=2000 </value>
+      <value compset="SSP245_CAM60%NORESM%NORPDDMSBC"> opom_cycle_year=2000 </value>
+      <value compset="SSP245_CAM60%NORESM%NORPDDMSBC"> dms_source_type='CYCLICAL' </value>
+      <value compset="SSP245_CAM60%NORESM%NORPDDMSBC"> opom_source_type='CYCLICAL' </value>
+
+      <!-- fSST AMIP type 2015-2019 SSP245-->
 
       <!-- fSST 4xCO2-->
       <value compset="1850_CAM60%NORESM%NORBC%4xCO2"> co2vmr=1138.8e-6 </value>
@@ -551,6 +562,13 @@
       <value compset="_CAM60%(NORESM|PTAERO)"> lwkcomp8_file='$DIN_LOC_ROOT/noresm-only/atm/cam/camoslo/AeroTab_8jun17/lwkcomp8.out' </value>
       <value compset="_CAM60%(NORESM|PTAERO)"> lwkcomp9_file='$DIN_LOC_ROOT/noresm-only/atm/cam/camoslo/AeroTab_8jun17/lwkcomp9.out' </value>
       <value compset="_CAM60%(NORESM|PTAERO)"> lwkcomp10_file='$DIN_LOC_ROOT/noresm-only/atm/cam/camoslo/AeroTab_8jun17/lwkcomp10.out' </value>
+
+
+      <value compset="_CAM60%NORESM"> forestfileALL='$DIN_LOC_ROOT/atm/cam/RaFSIP/forestALL.txt' </value>
+      <value compset="_CAM60%NORESM"> forestfileBRDS='$DIN_LOC_ROOT/atm/cam/RaFSIP/forestBRDS.txt' </value>
+      <value compset="_CAM60%NORESM"> forestfileBRHM='$DIN_LOC_ROOT/atm/cam/RaFSIP/forestBRHM.txt' </value>
+      <value compset="_CAM60%NORESM"> forestfileBR='$DIN_LOC_ROOT/atm/cam/RaFSIP/forestBR.txt' </value>
+      <value compset="_CAM60%NORESM"> forestfileBRwarm='$DIN_LOC_ROOT/atm/cam/RaFSIP/forestBRwarm.txt' </value>
 
     </values>
     <group>run_component_cam</group>

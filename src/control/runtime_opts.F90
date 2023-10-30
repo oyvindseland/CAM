@@ -39,7 +39,8 @@ subroutine read_namelist(nlfilename, single_column, scmlat, scmlon)
    use physics_buffer,      only: pbuf_readnl
    use phys_control,        only: phys_ctl_readnl
 #ifdef OSLO_AERO
-   use oslo_control,        only: oslo_ctl_readnl
+   use oslo_control,         only: oslo_ctl_readnl
+   use module_random_forests,only: sec_ice_readnl
 #endif
    use wv_saturation,       only: wv_sat_readnl
    use ref_pres,            only: ref_pres_readnl
@@ -185,6 +186,7 @@ subroutine read_namelist(nlfilename, single_column, scmlat, scmlon)
 #endif
 #if (defined OSLO_AERO)
    call oslo_ctl_readnl(nlfilename)
+   call sec_ice_readnl(nlfilename)
 #endif
    call offline_driver_readnl(nlfilename)
    call analytic_ic_readnl(nlfilename)
